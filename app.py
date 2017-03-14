@@ -31,7 +31,63 @@ def about():
     return render_template('about.html')
 
 @app.route('/walk/')
-def hello_world():
+def walk():
+    points = 0
+    end = 0
+
+    days = {0:"Monday", 1:"Tuesday", 2:"Wednesday", 3:"Thursday", 4:"Friday", 5:"Saturday", 6:"Sunday"}
+    weather_com_result = pywapi.get_weather_from_weather_com('USMA0011')
+
+    temp = weather_com_result['forecasts'][1]['high']
+    forecast = weather_com_result['forecasts'][1]['day']
+    weather = forecast['text']
+    precip = int(forecast['chance_precip'])
+    wind = forecast['wind']
+    wind_speed = wind['speed']
+
+    temp = int(temp) * 1.8 + 32
+    wind = round(int(wind_speed) * 0.6214, 0)
+    if temp > 31:
+        if temp < 86:
+            points = points + round(float(temp)/16, 1)
+    if "Sunny" in weather:
+        if "Mostly Sunny" == weather:
+            points = points + 1
+        else:
+            points = points + 0.5
+    if "Cloudy" in weather:
+        if "Mostly Cloudy" == weather:
+            points = points + 1
+        else:
+            points = points + 0.5
+    else:
+        points = points + 0
+
+    if precip <= 20:
+        points = points + 5
+    elif precip >= 80:
+        end = end + 1
+    else:
+        predec = 1./(float(precip) / 100)
+        points = points + float(Decimal(predec))
+    if wind <= 20:
+        points = points + 3
+    else:
+        points = points + 3 - ((wind - 15)/15) * 3
+    conclusion = 'Unclear'
+    if end >= 1:
+        conclusion = "you should not walk!"
+    else:
+        if points > 6:
+            conclusion = "you should walk!"
+        elif points < 8:
+            conclusion = "you should not walk!"
+        else:
+           conclusion = "you could walk, but you dont really have to. your choice!"
+    return render_template('walk.html',weather=weather_com_result, conclusion=conclusion)
+
+@app.route('/walk_static/')
+def walk_static():
     points = 0
     end = 0
 
